@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StudyGN - Plateforme de Révision Universitaire</title>
-    <!-- Tailwind CSS pour un design moderne et rapide -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -29,10 +28,35 @@
                 <h1 class="text-xl font-bold tracking-tight">StudyGN <span class="text-xs bg-slate-700 px-2 py-1 rounded text-brand-400">Uni</span></h1>
             </div>
             <div class="flex items-center space-x-4">
-                <span class="text-xs text-slate-400 hidden sm:inline">Communication & Journalisme</span>
+                <span id="trialStatus" class="text-xs bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full font-medium">Essai gratuit : calcul...</span>
             </div>
         </div>
     </header>
+
+    <!-- Écran de blocage (Paywall / Fin d'essai) -->
+    <div id="paywallModal" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
+            <div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">🔒</div>
+            <h3 class="text-xl font-bold text-white mb-2">Votre période d'essai d'une semaine a expiré</h3>
+            <p class="text-slate-300 text-sm mb-6">
+                Pour continuer à profiter de toutes les fiches de révision en Communication et Journalisme, activez votre abonnement mensuel.
+            </p>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 text-left">
+                <p class="text-xs text-slate-400 mb-1">Comment payer (Orange Money / Virement) :</p>
+                <p class="text-sm font-semibold text-white">1. Contactez l'administrateur</p>
+                <p class="text-sm font-semibold text-white">2. Envoyez votre code d'activation secret</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="alert('Veuillez contacter le support pour débloquer votre accès mensuel.')" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 rounded-xl transition text-sm">
+                    Activer mon abonnement
+                </button>
+                <div class="flex gap-2">
+                    <input type="text" id="secretCodeInput" placeholder="Entrer votre code secret" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-white">
+                    <button onclick="checkSecretCode()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Valider</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Contenu Principal -->
     <main class="flex-grow max-w-5xl mx-auto px-4 py-6 w-full">
@@ -43,7 +67,6 @@
             <p class="text-slate-300 text-sm max-w-2xl mb-4">
                 Accédez à vos fiches de cours, méthodologies et quiz pour réussir vos examens en Communication et Journalisme.
             </p>
-            <!-- Barre de recherche -->
             <div class="relative">
                 <input type="text" id="searchInput" placeholder="Rechercher un cours, une notion (ex: Interview, Droit...)" 
                     class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500">
@@ -61,7 +84,6 @@
         <!-- Liste des Fiches de Cours -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="coursesGrid">
             
-            <!-- Carte 1 -->
             <div class="course-card bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between hover:border-brand-500 transition" data-category="communication">
                 <div>
                     <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-900/60 text-indigo-300 px-2 py-1 rounded">Communication</span>
@@ -74,7 +96,6 @@
                 </div>
             </div>
 
-            <!-- Carte 2 -->
             <div class="course-card bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between hover:border-brand-500 transition" data-category="journalisme">
                 <div>
                     <span class="text-[10px] font-bold uppercase tracking-wider bg-amber-900/60 text-amber-300 px-2 py-1 rounded">Journalisme</span>
@@ -87,7 +108,6 @@
                 </div>
             </div>
 
-            <!-- Carte 3 -->
             <div class="course-card bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between hover:border-brand-500 transition" data-category="methodo">
                 <div>
                     <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-2 py-1 rounded">Méthodologie</span>
@@ -103,13 +123,59 @@
         </div>
     </main>
 
-    <!-- Pied de page -->
     <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-500">
         StudyGN - Développé pour les étudiants en Communication et Journalisme.
     </footer>
 
-    <!-- Script de filtrage simple -->
+    <!-- Script de gestion de l'essai gratuit (7 jours) -->
     <script>
+        // Durée de l'essai fixée à 7 jours (1 semaine)
+        const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000; 
+        const SECRET_PRO_CODE = "STUDYGN2026"; // Code secret à fournir après paiement
+
+        function checkTrial() {
+            let installTime = localStorage.getItem('studygn_install_time');
+            let isPaid = localStorage.getItem('studygn_is_paid') === 'true';
+
+            if (isPaid) {
+                document.getElementById('trialStatus').innerText = "Abonnement Actif ✓";
+                document.getElementById('trialStatus').className = "text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-medium";
+                return;
+            }
+
+            if (!installTime) {
+                installTime = new Date().getTime();
+                localStorage.setItem('studygn_install_time', installTime);
+            }
+
+            let now = new Date().getTime();
+            let elapsed = now - parseInt(installTime);
+            let timeLeft = TRIAL_DURATION_MS - elapsed;
+
+            if (timeLeft <= 0) {
+                document.getElementById('paywallModal').classList.remove('hidden');
+                document.getElementById('trialStatus').innerText = "Essai expiré ✕";
+                document.getElementById('trialStatus').className = "text-xs bg-rose-500/20 text-rose-300 px-3 py-1 rounded-full font-medium";
+            } else {
+                let daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+                document.getElementById('trialStatus').innerText = `Essai gratuit : ${daysLeft} jour(s) restants`;
+            }
+        }
+
+        function checkSecretCode() {
+            let inputCode = document.getElementById('secretCodeInput').value.trim();
+            if (inputCode === SECRET_PRO_CODE) {
+                localStorage.setItem('studygn_is_paid', 'true');
+                alert('Paiement validé ! Bienvenue sur StudyGN.');
+                document.getElementById('paywallModal').classList.add('hidden');
+                location.reload();
+            } else {
+                alert('Code secret incorrect. Contactez l\'administrateur pour régler votre abonnement.');
+            }
+        }
+
+        window.onload = checkTrial;
+
         function filterCourses(category) {
             const cards = document.querySelectorAll('.course-card');
             cards.forEach(card => {
@@ -121,7 +187,6 @@
             });
         }
 
-        // Recherche en temps réel
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const cards = document.querySelectorAll('.course-card');
