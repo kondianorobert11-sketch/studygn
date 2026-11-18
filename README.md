@@ -1,1 +1,1 @@
-# studygn
+# studyeasy
