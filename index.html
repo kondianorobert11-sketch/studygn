@@ -36,13 +36,29 @@
         </div>
     </header>
 
+    <!-- Modal de lecture de cours / PDF -->
+    <div id="readerModal" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 id="readerTitle" class="text-lg font-bold text-white">Titre du cours</h3>
+                <button onclick="closeReader()" class="text-slate-400 hover:text-white text-lg font-bold px-2">&times;</button>
+            </div>
+            <div id="readerContent" class="flex-grow bg-slate-900 p-4 rounded-xl border border-slate-700 overflow-y-auto text-sm text-slate-300 space-y-3">
+                <!-- Contenu du cours affiché ici -->
+            </div>
+            <div class="text-right">
+                <button onclick="closeReader()" class="bg-brand-600 hover:bg-brand-500 text-white px-5 py-2 rounded-xl text-xs font-semibold">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Écran de blocage (Paywall / Fin d'essai) -->
     <div id="paywallModal" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
             <div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">🔒</div>
             <h3 class="text-xl font-bold text-white mb-2">Période d'essai d'une semaine expirée</h3>
             <p class="text-slate-300 text-sm mb-6">
-                Pour continuer à importer vos cours en PDF et accéder à toutes les fiches en Communication, Droit et autres filières, activez votre abonnement.
+                Pour continuer à importer vos cours et accéder à toutes les fiches, activez votre abonnement.
             </p>
             <div class="space-y-3">
                 <input type="text" id="secretCodeInput" placeholder="Entrer votre code d'activation secret" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-xs text-white text-center">
@@ -65,7 +81,7 @@
             </p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input type="text" id="searchInput" placeholder="Rechercher un cours, une notion (ex: Droit, Interview, Communication...)" 
+                <input type="text" id="searchInput" placeholder="Rechercher un cours, une notion..." 
                     class="bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500">
                 <select id="levelFilter" class="bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-brand-500">
                     <option value="all">Tous les niveaux (L1, L2, L3, L4)</option>
@@ -77,49 +93,34 @@
             </div>
         </section>
 
-        <!-- NOUVEAU MODULE : Importer un PDF (Demandé) -->
+        <!-- MODULE D'IMPORTATION DE PDF (Avec saisie libre de la matière) -->
         <section class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-lg">
             <div class="flex items-center space-x-3 mb-4">
                 <span class="text-xl">📁</span>
                 <div>
-                    <h3 class="text-lg font-bold text-white">Importer un nouveau cours (PDF)</h3>
-                    <p class="text-xs text-slate-400">Téléversez vos documents pour les analyser et les stocker dans votre espace de révision.</p>
+                    <h3 class="text-lg font-bold text-white">Importer un nouveau cours ou PDF</h3>
+                    <p class="text-xs text-slate-400">Ajoutez n'importe quelle matière et téléversez votre fichier pour l'ouvrir et réviser instantanément.</p>
                 </div>
             </div>
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input type="text" id="pdfTitle" placeholder="Intitulé ou matière (ex: Sociologie des Médias)" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white">
-                    <select id="pdfCategory" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white">
-                        <option value="communication">Communication & Journalisme</option>
-                        <option value="droit">Droit & Sciences Po</option>
-                        <option value="eco">Économie & Gestion</option>
-                    </select>
+                    <input type="text" id="pdfTitle" placeholder="Intitulé du cours (ex: Techniques d'Interview)" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white">
+                    <!-- Champ libre pour créer ou ajouter n'importe quelle matière -->
+                    <input type="text" id="pdfCategoryCustom" placeholder="Nom de la matière / filière (ex: Journalisme, Droit...)" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white">
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 items-center pt-2">
-                    <input type="file" id="pdfFile" accept=".pdf" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer">
+                    <input type="file" id="pdfFile" accept=".pdf,.doc,.docx,.txt" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer">
                     <button onclick="importPDF()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl text-xs font-semibold transition whitespace-nowrap">
-                        Analyser le PDF avec l'IA
+                        Ajouter et Analyser
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- Filtres par filière / faculté -->
-        <div>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Filtrer par filière / faculté</p>
-            <div class="flex flex-wrap gap-2" id="categoryFilters">
-                <button onclick="filterCourses('all')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-brand-600 text-white transition shadow">Tout voir</button>
-                <button onclick="filterCourses('droit')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Droit & Sciences Po</button>
-                <button onclick="filterCourses('eco')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Économie & Gestion</button>
-                <button onclick="filterCourses('info')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Informatique & Génie</button>
-                <button onclick="filterCourses('communication')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Communication & Journalisme</button>
-            </div>
-        </div>
-
         <!-- Liste des Fiches de Cours -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="coursesGrid">
             
-            <div class="course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md" data-category="droit" data-level="L1">
+            <div class="course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md" data-category="Droit & Sciences Po" data-level="L1">
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-900/60 text-indigo-300 px-2.5 py-1 rounded-lg">Droit & Sciences Po</span>
@@ -130,37 +131,7 @@
                 </div>
                 <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
                     <span class="text-[11px] text-slate-500">Fiche officielle L1</span>
-                    <button onclick="alert('Ouverture de la fiche de cours...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Lire le cours</button>
-                </div>
-            </div>
-
-            <div class="course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md" data-category="droit" data-level="L2">
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-900/60 text-indigo-300 px-2.5 py-1 rounded-lg">Droit & Sciences Po</span>
-                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">L2</span>
-                    </div>
-                    <h3 class="text-base font-bold text-white">Droit des Obligations (Contrats & Responsabilité)</h3>
-                    <p class="text-slate-400 text-xs mt-2">Conditions de formation du contrat (consentement, capacité, objet, cause), nullité et responsabilité civile délictuelle.</p>
-                </div>
-                <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
-                    <span class="text-[11px] text-slate-500">Fiche officielle L2</span>
-                    <button onclick="alert('Ouverture de la fiche de cours...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Lire le cours</button>
-                </div>
-            </div>
-
-            <div class="course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md" data-category="droit" data-level="L3">
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-900/60 text-indigo-300 px-2.5 py-1 rounded-lg">Droit & Sciences Po</span>
-                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">L3</span>
-                    </div>
-                    <h3 class="text-base font-bold text-white">Droit Commercial Général & Actes Uniformes OHADA</h3>
-                    <p class="text-slate-400 text-xs mt-2">Le statut du commerçant, les actes de commerce, le fonds de commerce et les sociétés commerciales dans l'espace OHADA.</p>
-                </div>
-                <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
-                    <span class="text-[11px] text-slate-500">Fiche officielle L3</span>
-                    <button onclick="alert('Ouverture de la fiche de cours...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Lire le cours</button>
+                    <button onclick="openReader('Introduction Générale au Droit', 'Ce cours détaille les sources du droit en Guinée, la constitution et les institutions de la République.')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Consulter</button>
                 </div>
             </div>
 
@@ -171,7 +142,7 @@
         StudyGN - Plateforme de révision universitaire en Guinée. Tous droits réservés.
     </footer>
 
-    <!-- Script de gestion (Essai 7 jours, Paywall et Import PDF) -->
+    <!-- Script de gestion -->
     <script>
         const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000; 
         const SECRET_PRO_CODE = "STUDYGN2026";
@@ -212,21 +183,31 @@
             let inputCode = document.getElementById('secretCodeInput').value.trim();
             if (inputCode === SECRET_PRO_CODE) {
                 localStorage.setItem('studygn_is_paid', 'true');
-                alert('Abonnement activé avec succès ! Bienvenue sur StudyGN.');
+                alert('Abonnement activé avec succès !');
                 document.getElementById('paywallModal').classList.add('hidden');
                 location.reload();
             } else {
-                alert('Code secret incorrect. Contactez l\'administrateur.');
+                alert('Code secret incorrect.');
             }
+        }
+
+        function openReader(title, content) {
+            document.getElementById('readerTitle').innerText = title;
+            document.getElementById('readerContent').innerHTML = `<p class="leading-relaxed">${content}</p>`;
+            document.getElementById('readerModal').classList.remove('hidden');
+        }
+
+        function closeReader() {
+            document.getElementById('readerModal').classList.add('hidden');
         }
 
         function importPDF() {
             let title = document.getElementById('pdfTitle').value.trim();
-            let category = document.getElementById('pdfCategory').value;
+            let customCategory = document.getElementById('pdfCategoryCustom').value.trim() || "Général";
             let fileInput = document.getElementById('pdfFile');
             
             if (!title || fileInput.files.length === 0) {
-                alert('Veuillez entrer un titre et sélectionner un fichier PDF.');
+                alert('Veuillez entrer un titre de cours et sélectionner un fichier.');
                 return;
             }
 
@@ -235,38 +216,28 @@
             
             let newCard = document.createElement('div');
             newCard.className = "course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md";
-            newCard.dataset.category = category;
+            newCard.dataset.category = customCategory;
             newCard.dataset.level = "L2";
             
             newCard.innerHTML = `
                 <div>
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-lg">Importé (PDF)</span>
-                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">PDF</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-lg">${customCategory}</span>
+                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">PDF Importé</span>
                     </div>
                     <h3 class="text-base font-bold text-white">${title}</h3>
-                    <p class="text-slate-400 text-xs mt-2">Fichier : ${fileName} — Analysé et intégré avec succès.</p>
+                    <p class="text-slate-400 text-xs mt-2">Fichier : ${fileName} — Fiche prête et analysée.</p>
                 </div>
                 <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
-                    <span class="text-[11px] text-slate-500">Prêt à réviser</span>
-                    <button onclick="alert('Ouverture du document PDF...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Consulter</button>
+                    <span class="text-[11px] text-slate-500">Ajouté par vous</span>
+                    <button onclick="openReader('${title}', 'Contenu du document importé (${fileName}). Ce cours a été chargé avec succès dans votre espace StudyGN pour vos révisions.')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Consulter</button>
                 </div>
             `;
             container.prepend(newCard);
             document.getElementById('pdfTitle').value = '';
+            document.getElementById('pdfCategoryCustom').value = '';
             fileInput.value = '';
-            alert('Votre cours PDF a été importé et analysé avec succès !');
-        }
-
-        function filterCourses(category) {
-            const cards = document.querySelectorAll('.course-card');
-            cards.forEach(card => {
-                if (category === 'all' || card.dataset.category === category) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+            alert('Cours importé et matière ajoutée avec succès !');
         }
 
         document.getElementById('searchInput').addEventListener('input', function(e) {
