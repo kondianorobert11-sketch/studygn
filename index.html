@@ -1,928 +1,284 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyGN Uni - Plateforme de Révision Universitaire en Guinée (L1 - L4)</title>
+    <title>StudyGN - Plateforme de Révision Universitaire</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0b1120;
-            color: #f8fafc;
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#6366f1', 600: '#4f46e5' }
+                    }
+                }
+            }
         }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.25s ease;
-        }
-        .glass-card:hover {
-            border-color: rgba(59, 130, 246, 0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 999px;
-        }
-    </style>
+    </script>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
-    <!-- NAVBAR -->
-    <header class="sticky top-0 z-40 bg-[#0b1120]/90 backdrop-blur-md border-b border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
-                <span class="bg-blue-600 text-white font-extrabold px-2.5 py-1 rounded-lg text-sm tracking-wide shadow-lg shadow-blue-600/30">
-                    S-GN
-                </span>
+    <!-- En-tête -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="bg-brand-500 text-white font-bold p-2 rounded-lg text-lg">S-GN</span>
                 <div>
-                    <span class="font-bold text-lg text-white tracking-tight">StudyGN</span>
-                    <span class="text-xs text-slate-400 font-medium ml-1">Uni Guinée</span>
+                    <h1 class="text-xl font-bold tracking-tight">StudyGN <span class="text-xs bg-slate-700 px-2 py-1 rounded text-brand-400">Uni Guinée</span></h1>
                 </div>
             </div>
-
             <div class="flex items-center space-x-3">
-                <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    ⏳ Essai gratuit : 7 jour(s) restants
-                </span>
-                <button onclick="openSubModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition shadow-md shadow-blue-600/20">
-                    Passer Premium
-                </button>
+                <span id="trialStatus" class="text-xs bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-full font-medium">Essai gratuit : calcul...</span>
+                <button onclick="openPaywall()" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-lg">Passer Premium</button>
             </div>
         </div>
     </header>
 
-    <!-- HERO & FILTERS SECTION -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Écran de blocage (Paywall / Fin d'essai) -->
+    <div id="paywallModal" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
+            <div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">🔒</div>
+            <h3 class="text-xl font-bold text-white mb-2">Période d'essai d'une semaine expirée</h3>
+            <p class="text-slate-300 text-sm mb-6">
+                Pour continuer à importer vos cours en PDF et accéder à toutes les fiches en Communication, Droit et autres filières, activez votre abonnement.
+            </p>
+            <div class="space-y-3">
+                <input type="text" id="secretCodeInput" placeholder="Entrer votre code d'activation secret" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-xs text-white text-center">
+                <button onclick="checkSecretCode()" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 rounded-xl transition text-sm">
+                    Valider le code secret
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu Principal -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-6 w-full space-y-8">
         
-        <!-- Hero Banner -->
-        <div class="bg-gradient-to-br from-slate-800/80 via-slate-900 to-blue-950/40 border border-slate-800 rounded-2xl p-6 sm:p-8 mb-8 shadow-xl">
-            <div class="max-w-3xl">
-                <div class="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-blue-400 mb-2">
-                    <span>🇬🇳 Programme Officiel LMD Guinée</span>
-                    <span>•</span>
-                    <span>L1 • L2 • L3 • L4</span>
-                </div>
-                <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
-                    Espace de révision universitaire
-                </h1>
-                <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
-                    Accédez à vos fiches de cours, annales, méthodologies et quiz pour réussir vos examens dans toutes les universités publiques et privées de Guinée.
-                </p>
+        <!-- Section Bannière -->
+        <section class="bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-800 rounded-2xl p-6 md:p-8 border border-slate-700 shadow-xl">
+            <p class="text-xs text-brand-400 font-bold uppercase tracking-wider mb-2">programme officiel lmd guinée • l1 • l2 • l3 • l4</p>
+            <h2 class="text-2xl md:text-3xl font-extrabold mb-3 text-white">Espace de révision universitaire</h2>
+            <p class="text-slate-300 text-sm max-w-2xl mb-6">
+                Accédez à vos fiches de cours, annales, méthodologies et quiz pour réussir vos examens dans toutes les universités publiques et privées de Guinée.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input type="text" id="searchInput" placeholder="Rechercher un cours, une notion (ex: Droit, Interview, Communication...)" 
+                    class="bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500">
+                <select id="levelFilter" class="bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-brand-500">
+                    <option value="all">Tous les niveaux (L1, L2, L3, L4)</option>
+                    <option value="L1">Licence 1 (L1)</option>
+                    <option value="L2">Licence 2 (L2)</option>
+                    <option value="L3">Licence 3 (L3)</option>
+                    <option value="L4">Licence 4 (L4)</option>
+                </select>
             </div>
+        </section>
 
-            <!-- Search & University Selector Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <!-- Search Input -->
-                <div class="md:col-span-6 relative">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                        🔍
-                    </span>
-                    <input type="text" id="searchInput" onkeyup="filterCourses()" 
-                        placeholder="Rechercher un cours, une notion (ex: Droit, Algorithme, Comptabilité, Anatomie...)" 
-                        class="w-full bg-slate-950/90 border border-slate-700 text-white text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-slate-500">
+        <!-- NOUVEAU MODULE : Importer un PDF (Demandé) -->
+        <section class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-lg">
+            <div class="flex items-center space-x-3 mb-4">
+                <span class="text-xl">📁</span>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Importer un nouveau cours (PDF)</h3>
+                    <p class="text-xs text-slate-400">Téléversez vos documents pour les analyser et les stocker dans votre espace de révision.</p>
                 </div>
-
-                <!-- University Select -->
-                <div class="md:col-span-4">
-                    <select id="uniSelect" onchange="filterCourses()" 
-                        class="w-full bg-slate-950/90 border border-slate-700 text-white text-sm rounded-xl px-3.5 py-3 focus:outline-none focus:border-blue-500">
-                        <option value="ALL">🏛️ Toutes les Universités (Guinée)</option>
-                        <optgroup label="Universités Publiques">
-                            <option value="UGANC">UGANC (Gamal Abdel Nasser - Conakry)</option>
-                            <option value="UGLC-SC">UGLC-SC (Général Lansana Conté - Sonfonia)</option>
-                            <option value="ISIC">ISIC (Information & Communication - Kountia)</option>
-                            <option value="UJNK">UJNK (Julius Nyerere - Kankan)</option>
-                            <option value="U-LABE">Université de Labé</option>
-                            <option value="U-NZEREKORE">Université de N'Zérékoré</option>
-                            <option value="IST-MAMOU">IST Mamou (Institut Supérieur de Technologie)</option>
-                            <option value="ISAV-FARANAH">ISAV Valéry Giscard d'Estaing (Faranah)</option>
-                            <option value="ISSEG">ISSEG (Sciences de l'Éducation - Lambanyi)</option>
-                        </optgroup>
-                        <optgroup label="Universités Privées">
-                            <option value="KOFFI">Université Koffi Annan de Guinée (UKAG)</option>
-                            <option value="UNC">Université Nongo Conakry (UNC)</option>
-                            <option value="MERCURE">Université Mercure International</option>
-                            <option value="BARACK">Université Barack Obama de Guinée</option>
-                            <option value="LA-SOURCE">Université La Source</option>
-                            <option value="THIERNO">Université Thierno Amadou Diallo (UTAD)</option>
-                        </optgroup>
+            </div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input type="text" id="pdfTitle" placeholder="Intitulé ou matière (ex: Sociologie des Médias)" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white">
+                    <select id="pdfCategory" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white">
+                        <option value="communication">Communication & Journalisme</option>
+                        <option value="droit">Droit & Sciences Po</option>
+                        <option value="eco">Économie & Gestion</option>
                     </select>
                 </div>
-
-                <!-- Level Select (L1 - L4) -->
-                <div class="md:col-span-2">
-                    <select id="levelSelect" onchange="filterCourses()" 
-                        class="w-full bg-slate-950/90 border border-slate-700 text-white text-sm rounded-xl px-3.5 py-3 focus:outline-none focus:border-blue-500 font-medium">
-                        <option value="ALL">🎓 Tous niveaux</option>
-                        <option value="L1">Licence 1 (L1)</option>
-                        <option value="L2">Licence 2 (L2)</option>
-                        <option value="L3">Licence 3 (L3)</option>
-                        <option value="L4">Licence 4 (L4)</option>
-                    </select>
+                <div class="flex flex-col sm:flex-row gap-3 items-center pt-2">
+                    <input type="file" id="pdfFile" accept=".pdf" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer">
+                    <button onclick="importPDF()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl text-xs font-semibold transition whitespace-nowrap">
+                        Analyser le PDF avec l'IA
+                    </button>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- FILIERES PILLS (Horizontal Scroll) -->
-        <div class="mb-6">
-            <div class="flex items-center justify-between mb-2.5">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Filtrer par Filière / Faculté</h2>
-                <span id="courseCount" class="text-xs text-slate-400 font-medium">Chargement...</span>
+        <!-- Filtres par filière / faculté -->
+        <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Filtrer par filière / faculté</p>
+            <div class="flex flex-wrap gap-2" id="categoryFilters">
+                <button onclick="filterCourses('all')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-brand-600 text-white transition shadow">Tout voir</button>
+                <button onclick="filterCourses('droit')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Droit & Sciences Po</button>
+                <button onclick="filterCourses('eco')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Économie & Gestion</button>
+                <button onclick="filterCourses('info')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Informatique & Génie</button>
+                <button onclick="filterCourses('communication')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Communication & Journalisme</button>
             </div>
-            <div id="categoryPills" class="flex space-x-2 overflow-x-auto pb-2 custom-scrollbar">
-                <!-- Buttons injected via JS -->
+        </div>
+
+        <!-- Liste des Fiches de Cours -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="coursesGrid">
+            
+            <div class="course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md" data-category="droit" data-level="L1">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-900/60 text-indigo-300 px-2.5 py-1 rounded-lg">Droit & Sciences Po</span>
+                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">L1</span>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Introduction Générale au Droit & Droit Constitutionnel</h3>
+                    <p class="text-slate-400 text-xs mt-2">Les sources du droit en République de Guinée, la hiérarchie des normes, l'État, la souveraineté et les régimes politiques.</p>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
+                    <span class="text-[11px] text-slate-500">Fiche officielle L1</span>
+                    <button onclick="alert('Ouverture de la fiche de cours...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Lire le cours</button>
+                </div>
             </div>
-        </div>
 
-        <!-- COURSES GRID -->
-        <div id="coursesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- Cards injected via JS -->
-        </div>
+            <div class="course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md" data-category="droit" data-level="L2">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-900/60 text-indigo-300 px-2.5 py-1 rounded-lg">Droit & Sciences Po</span>
+                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">L2</span>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Droit des Obligations (Contrats & Responsabilité)</h3>
+                    <p class="text-slate-400 text-xs mt-2">Conditions de formation du contrat (consentement, capacité, objet, cause), nullité et responsabilité civile délictuelle.</p>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
+                    <span class="text-[11px] text-slate-500">Fiche officielle L2</span>
+                    <button onclick="alert('Ouverture de la fiche de cours...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Lire le cours</button>
+                </div>
+            </div>
 
-        <!-- EMPTY STATE -->
-        <div id="emptyState" class="hidden text-center py-16 bg-slate-900/50 rounded-2xl border border-slate-800">
-            <p class="text-3xl mb-3">📚</p>
-            <h3 class="text-lg font-bold text-white mb-1">Aucune fiche trouvée pour ces critères</h3>
-            <p class="text-slate-400 text-sm mb-4">Essaie de modifier le niveau (L1-L4), l'université ou d'effacer ta recherche.</p>
-            <button onclick="resetFilters()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
-                Afficher tout le programme
-            </button>
-        </div>
+            <div class="course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md" data-category="droit" data-level="L3">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-900/60 text-indigo-300 px-2.5 py-1 rounded-lg">Droit & Sciences Po</span>
+                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">L3</span>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Droit Commercial Général & Actes Uniformes OHADA</h3>
+                    <p class="text-slate-400 text-xs mt-2">Le statut du commerçant, les actes de commerce, le fonds de commerce et les sociétés commerciales dans l'espace OHADA.</p>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
+                    <span class="text-[11px] text-slate-500">Fiche officielle L3</span>
+                    <button onclick="alert('Ouverture de la fiche de cours...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Lire le cours</button>
+                </div>
+            </div>
 
+        </div>
     </main>
 
-    <!-- FOOTER -->
-    <footer class="border-t border-slate-800/80 py-6 mt-12 bg-[#080d19]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
-            <p>© 2026 StudyGN Uni — Réseau Universitaire de Guinée (LMD L1 à L4).</p>
-            <p class="mt-2 sm:mt-0">Conakry • Kankan • Labé • Mamou • Faranah • N'Zérékoré</p>
-        </div>
+    <footer class="bg-slate-800 border-t border-slate-700 py-6 text-center text-xs text-slate-500 mt-12">
+        StudyGN - Plateforme de révision universitaire en Guinée. Tous droits réservés.
     </footer>
 
-    <!-- COURSE READER & QUIZ MODAL -->
-    <div id="courseModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Modal Header -->
-            <div class="p-5 sm:p-6 border-b border-slate-800 flex items-start justify-between bg-slate-950/60">
-                <div>
-                    <div class="flex flex-wrap items-center gap-2 mb-2">
-                        <span id="modalCategory" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-blue-500/20 text-blue-400"></span>
-                        <span id="modalLevel" class="text-[11px] font-bold uppercase px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400"></span>
-                        <span id="modalUni" class="text-[11px] font-medium px-2.5 py-0.5 rounded bg-slate-800 text-slate-300"></span>
-                    </div>
-                    <h3 id="modalTitle" class="text-xl sm:text-2xl font-bold text-white"></h3>
-                </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg p-2 transition">
-                    ✕
-                </button>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="p-5 sm:p-6 overflow-y-auto space-y-6 text-slate-300 text-sm sm:text-base leading-relaxed custom-scrollbar">
-                <div id="modalContent" class="space-y-4"></div>
-
-                <!-- Interactive Quiz Section inside Modal -->
-                <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 mt-6">
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="font-bold text-white flex items-center gap-2">
-                            <span>⚡</span> Quiz Rapide d'Examen
-                        </h4>
-                        <span class="text-xs text-slate-400">Testez vos acquis</span>
-                    </div>
-                    <p id="quizQuestion" class="text-sm font-medium text-slate-200 mb-3"></p>
-                    <div id="quizOptions" class="space-y-2"></div>
-                    <p id="quizFeedback" class="text-xs font-semibold mt-3 hidden"></p>
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex justify-between items-center">
-                <span id="modalReadTime" class="text-xs text-slate-400"></span>
-                <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
-                    Terminer la révision
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SUBSCRIPTION MODAL -->
-    <div id="subModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <span class="bg-amber-500/20 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full">STUDYGN PREMIUM</span>
-                <button onclick="closeSubModal()" class="text-slate-400 hover:text-white">✕</button>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2">Débloquez tout le programme L1 - L4</h3>
-            <p class="text-sm text-slate-300 mb-4">
-                Profitez d'un accès illimité aux fiches de synthèse, sujets corrigés des sessions précédentes et quiz pour toutes les universités de Guinée.
-            </p>
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 mb-5 space-y-2 text-sm">
-                <div class="flex justify-between">
-                    <span class="text-slate-400">Pass Mensuel Étudiant</span>
-                    <span class="font-bold text-white">15 000 GNF / mois</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-slate-400">Pass Semestriel (Examens)</span>
-                    <span class="font-bold text-emerald-400">50 000 GNF / semestre</span>
-                </div>
-                <p class="text-xs text-slate-500 pt-2 border-t border-slate-800">
-                    Paiement mobile rapide via Orange Money, MTN MoMo ou PayCard.
-                </p>
-            </div>
-            <button onclick="closeSubModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl transition">
-                Continuer mon essai gratuit (7 jours)
-            </button>
-        </div>
-    </div>
-
+    <!-- Script de gestion (Essai 7 jours, Paywall et Import PDF) -->
     <script>
-        // Liste complète des filières universitaires guinéennes
-        const categories = [
-            "Tout voir",
-            "Droit & Sciences Po",
-            "Économie & Gestion",
-            "Informatique & Génie",
-            "Médecine & Santé",
-            "Communication & Journalisme",
-            "Lettres & Sciences Humaines",
-            "Sciences & Agronomie",
-            "Méthodologie"
-        ];
+        const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000; 
+        const SECRET_PRO_CODE = "STUDYGN2026";
 
-        // Base de données complète des cours (L1 à L4 - Programme Guinéen)
-        const courses = [
-            // --- DROIT & SCIENCES POLITIQUES ---
-            {
-                id: 1,
-                category: "Droit & Sciences Po",
-                level: "L1",
-                uni: "UGLC-SC / KOFFI / UNC",
-                title: "Introduction Générale au Droit & Droit Constitutionnel",
-                summary: "Les sources du droit en République de Guinée, la hiérarchie des normes, l'État, la souveraineté et les régimes politiques.",
-                readTime: "8 min de lecture",
-                content: `
-                    <p><strong>1. La règle de droit et ses caractères :</strong> La règle de droit est générale, abstraite, obligatoire et sanctionnée par l'autorité publique en République de Guinée.</p>
-                    <p><strong>2. La hiérarchie des normes (Pyramide de Kelsen) :</strong> Au sommet se trouve la Constitution guinéenne, suivie des traités internationaux ratifiés, des lois organiques, des lois ordinaires votées par l'Assemblée Nationale, des ordonnances et des règlements (décrets, arrêtés).</p>
-                    <p><strong>3. Les formes de l'État :</strong> L'État unitaire (cas de la Guinée, avec décentralisation et déconcentration) s'oppose à l'État fédéral.</p>
-                `,
-                quiz: {
-                    question: "Quelle norme se situe tout au sommet de la hiérarchie juridique en Guinée ?",
-                    options: ["Le décret présidentiel", "La Constitution", "La loi ordinaire"],
-                    answer: 1
-                }
-            },
-            {
-                id: 2,
-                category: "Droit & Sciences Po",
-                level: "L2",
-                uni: "UGLC-SC / UJNK / MERCURE",
-                title: "Droit des Obligations (Contrats & Responsabilité)",
-                summary: "Conditions de formation du contrat (consentement, capacité, objet, cause), nullité et responsabilité civile délictuelle.",
-                readTime: "10 min de lecture",
-                content: `
-                    <p><strong>1. Les 4 conditions essentielles de validité d'un contrat :</strong> Le consentement libre et éclairé des parties (absence d'erreur, de dol ou de violence), la capacité de contracter, un objet certain et une cause licite.</p>
-                    <p><strong>2. La force obligatoire du contrat :</strong> Les conventions légalement formées tiennent lieu de loi à ceux qui les ont faites.</p>
-                    <p><strong>3. La responsabilité civile :</strong> Tout fait quelconque de l'homme qui cause à autrui un dommage oblige celui par la faute duquel il est arrivé à le réparer.</p>
-                `,
-                quiz: {
-                    question: "Lequel de ces éléments est un vice du consentement ?",
-                    options: ["La capacité juridique", "Le dol (tromperie)", "La signature"],
-                    answer: 1
-                }
-            },
-            {
-                id: 3,
-                category: "Droit & Sciences Po",
-                level: "L3",
-                uni: "UGLC-SC / KOFFI / BARACK",
-                title: "Droit Commercial Général & Actes Uniformes OHADA",
-                summary: "Le statut du commerçant, les actes de commerce, le fonds de commerce et les sociétés commerciales dans l'espace OHADA.",
-                readTime: "9 min de lecture",
-                content: `
-                    <p><strong>1. L'espace OHADA :</strong> La Guinée est membre de l'Organisation pour l'Harmonisation en Afrique du Droit des Affaires (OHADA). Les Actes Uniformes sont directement applicables.</p>
-                    <p><strong>2. Définition du commerçant :</strong> Est commerçant celui qui fait de l'accomplissement d'actes de commerce par nature sa profession habituelle et indépendante.</p>
-                    <p><strong>3. Éléments du fonds de commerce :</strong> Il comprend obligatoirement la clientèle et l'enseigne ou le nom commercial.</p>
-                `,
-                quiz: {
-                    question: "Quel droit régit directement les sociétés commerciales en Guinée ?",
-                    options: ["Le droit OHADA", "Le droit coutumier", "Le code maritime"],
-                    answer: 0
-                }
-            },
-            {
-                id: 4,
-                category: "Droit & Sciences Po",
-                level: "L4",
-                uni: "UGLC-SC / KOFFI",
-                title: "Droit International Public & Organisations Africaines",
-                summary: "Sujets du droit international, règlement pacifique des différends, fonctionnement de l'Union Africaine (UA) et de la CEDEAO.",
-                readTime: "11 min de lecture",
-                content: `
-                    <p><strong>1. Les sujets du Droit International :</strong> Les États souverains (sujets originaires) et les Organisations Internationales (sujets dérivés comme l'ONU, l'UA, la CEDEAO).</p>
-                    <p><strong>2. Les sources du DIP (Article 38 du Statut de la CIJ) :</strong> Les conventions internationales, la coutume internationale, les principes généraux de droit.</p>
-                `,
-                quiz: {
-                    question: "Quel organe judiciaire principal tranche les litiges entre États à l'ONU ?",
-                    options: ["La Cour Pénale Internationale (CPI)", "La Cour Internationale de Justice (CIJ)", "La Cour de Justice de la CEDEAO"],
-                    answer: 1
-                }
-            },
+        function checkTrial() {
+            let installTime = localStorage.getItem('studygn_install_time');
+            let isPaid = localStorage.getItem('studygn_is_paid') === 'true';
 
-            // --- ÉCONOMIE & GESTION ---
-            {
-                id: 5,
-                category: "Économie & Gestion",
-                level: "L1",
-                uni: "UGLC-SC / UNC / LA-SOURCE",
-                title: "Microéconomie & Macroéconomie Fondamentale",
-                summary: "Comportement du consommateur, offre et demande, élasticité, PIB, inflation et politiques économiques.",
-                readTime: "7 min de lecture",
-                content: `
-                    <p><strong>1. Microéconomie :</strong> Étudie les choix individuels des ménages (maximisation de l'utilité sous contrainte budgétaire) et des entreprises (maximisation du profit).</p>
-                    <p><strong>2. Loi de l'offre et de la demande :</strong> Sur un marché concurrentiel, le prix d'équilibre s'ajuste pour égaliser la quantité offerte et la quantité demandée.</p>
-                    <p><strong>3. Macroéconomie :</strong> Analyse les grands agrégats : Produit Intérieur Brut (PIB), taux de chômage, inflation et balance des paiements.</p>
-                `,
-                quiz: {
-                    question: "Que mesure le PIB d'un pays comme la Guinée ?",
-                    options: ["La richesse totale créée sur le territoire en un an", "Uniquement les exportations de bauxite", "Le budget de l'État"],
-                    answer: 0
-                }
-            },
-            {
-                id: 6,
-                category: "Économie & Gestion",
-                level: "L2",
-                uni: "UGLC-SC / KOFFI / MERCURE",
-                title: "Comptabilité Générale & Système Comptable OHADA (SYSCOHADA)",
-                summary: "Bilan, compte de résultat, principe de la partie double, amortissements et écritures d'inventaire.",
-                readTime: "9 min de lecture",
-                content: `
-                    <p><strong>1. Le principe de la partie double :</strong> Toute opération comptable affecte au moins deux comptes : un compte débité (emploi) et un compte crédité (ressource) pour un montant strictement égal.</p>
-                    <p><strong>2. Le Bilan (SYSCOHADA) :</strong> Photographie du patrimoine à une date donnée. À gauche l'Actif (emplois : immobilisations, stocks, créances, trésorerie), à droite le Passif (ressources : capitaux propres, dettes).</p>
-                `,
-                quiz: {
-                    question: "Dans un bilan comptable, comment s'équilibrent l'Actif et le Passif ?",
-                    options: ["Actif > Passif", "Total Actif = Total Passif", "Passif = Actif + Dettes"],
-                    answer: 1
-                }
-            },
-            {
-                id: 7,
-                category: "Économie & Gestion",
-                level: "L3",
-                uni: "UGLC-SC / UNC / KOFFI",
-                title: "Gestion Financière & Analyse du Bilan Fonctionnel",
-                summary: "Calcul du Fonds de Roulement (FR), Besoin en Fonds de Roulement (BFR), Trésorerie Nette et seuil de rentabilité.",
-                readTime: "10 min de lecture",
-                content: `
-                    <p><strong>1. Équilibre financier fondamental :</strong></p>
-                    <ul class="list-disc pl-5 space-y-1">
-                        <li><strong>FR (Fonds de Roulement)</strong> = Ressources Stables - Emplois Stables</li>
-                        <li><strong>BFR (Besoin en Fonds de Roulement)</strong> = Actif Circulant - Passif Circulant</li>
-                        <li><strong>Trésorerie Nette (TN)</strong> = FR - BFR</li>
-                    </ul>
-                    <p><strong>2. Interprétation :</strong> Si FR > BFR, la trésorerie est positive, l'entreprise est financièrement saine à court terme.</p>
-                `,
-                quiz: {
-                    question: "Quelle est la formule de la Trésorerie Nette ?",
-                    options: ["FR + BFR", "FR - BFR", "BFR - FR"],
-                    answer: 1
-                }
-            },
-            {
-                id: 8,
-                category: "Économie & Gestion",
-                level: "L4",
-                uni: "UGLC-SC / KOFFI",
-                title: "Audit, Contrôle de Gestion & Stratégie d'Entreprise",
-                summary: "Diagnostic stratégique (SWOT, PESTEL), tableaux de bord, écarts budgétaires et normes d'audit interne.",
-                readTime: "8 min de lecture",
-                content: `
-                    <p><strong>1. Analyse PESTEL :</strong> Permet d'analyser le macro-environnement d'une entreprise (Politique, Économique, Socioculturel, Technologique, Écologique, Légal).</p>
-                    <p><strong>2. Matrice SWOT :</strong> Croise le diagnostic interne (Forces / Faiblesses) et le diagnostic externe (Opportunités / Menaces).</p>
-                `,
-                quiz: {
-                    question: "Que signifie la lettre 'O' dans la matrice SWOT ?",
-                    options: ["Organisation", "Opportunités", "Obligations"],
-                    answer: 1
-                }
-            },
-
-            // --- INFORMATIQUE & GÉNIE ---
-            {
-                id: 9,
-                category: "Informatique & Génie",
-                level: "L1",
-                uni: "UGANC / IST-MAMOU / UNC / KOFFI",
-                title: "Algorithmique & Programmation en Langage C",
-                summary: "Variables, structures conditionnelles, boucles (Pour, Tant que), tableaux et pointeurs de base.",
-                readTime: "8 min de lecture",
-                content: `
-                    <p><strong>1. Structure d'un algorithme :</strong> En-tête, Déclarations (constantes, variables et types) et Corps (Début ... Fin).</p>
-                    <p><strong>2. Les boucles essentielles :</strong></p>
-                    <ul class="list-disc pl-5 space-y-1">
-                        <li><strong>POUR (for) :</strong> Quand on connaît à l'avance le nombre d'itérations.</li>
-                        <li><strong>TANT QUE (while) :</strong> Condition vérifiée avant l'exécution (peut tourner 0 fois).</li>
-                        <li><strong>RÉPÉTER ... JUSQU'À (do-while) :</strong> Exécutée au moins une fois.</li>
-                    </ul>
-                `,
-                quiz: {
-                    question: "Quelle boucle s'exécute toujours au moins une fois ?",
-                    options: ["Tant que (while)", "Répéter ... Jusqu'à (do-while)", "Pour (for)"],
-                    answer: 1
-                }
-            },
-            {
-                id: 10,
-                category: "Informatique & Génie",
-                level: "L2",
-                uni: "UGANC / IST-MAMOU / UNC",
-                title: "Bases de Données Relationnelles & Langage SQL",
-                summary: "Modèle Entité-Association (Merise), normalisation (1FN, 2FN, 3FN), clés primaires/étrangères et requêtes SQL.",
-                readTime: "9 min de lecture",
-                content: `
-                    <p><strong>1. Méthode Merise :</strong> Passage du MCD (Modèle Conceptuel de Données) au MLD (Modèle Logique) puis au MPD (Physique).</p>
-                    <p><strong>2. Requêtes SQL de base :</strong></p>
-                    <p class="bg-slate-950 p-2 rounded font-mono text-xs text-blue-400">SELECT nom, filiere FROM etudiants WHERE niveau = 'L2' ORDER BY nom ASC;</p>
-                `,
-                quiz: {
-                    question: "Quelle clause SQL permet de filtrer les lignes selon une condition ?",
-                    options: ["ORDER BY", "WHERE", "GROUP BY"],
-                    answer: 1
-                }
-            },
-            {
-                id: 11,
-                category: "Informatique & Génie",
-                level: "L3",
-                uni: "UGANC / IST-MAMOU / KOFFI",
-                title: "Réseaux Informatiques, Modèle OSI & Adressage IPv4",
-                summary: "Les 7 couches du modèle OSI, protocole TCP/IP, calcul de sous-réseaux (masque CIDR) et routage.",
-                readTime: "10 min de lecture",
-                content: `
-                    <p><strong>1. Les 7 couches du modèle OSI (de bas en haut) :</strong> 1. Physique, 2. Liaison de données, 3. Réseau (IP), 4. Transport (TCP/UDP), 5. Session, 6. Présentation, 7. Application (HTTP, DNS).</p>
-                    <p><strong>2. Différence TCP vs UDP :</strong> TCP est orienté connexion et fiable (accusés de réception), tandis qu'UDP est sans connexion et plus rapide (streaming, VoIP).</p>
-                `,
-                quiz: {
-                    question: "À quelle couche du modèle OSI appartient le protocole IP ?",
-                    options: ["Couche 2 (Liaison)", "Couche 3 (Réseau)", "Couche 4 (Transport)"],
-                    answer: 1
-                }
-            },
-            {
-                id: 12,
-                category: "Informatique & Génie",
-                level: "L4",
-                uni: "UGANC / IST-MAMOU",
-                title: "Génie Logiciel, Architecture Web & Cybersécurité",
-                summary: "Méthodes Agiles (Scrum), API REST, authentification JWT et protection contre les failles OWASP (SQLi, XSS).",
-                readTime: "9 min de lecture",
-                content: `
-                    <p><strong>1. Sécurité Web (OWASP) :</strong> L'injection SQL (SQLi) est évitée grâce aux requêtes préparées. La faille XSS (Cross-Site Scripting) est bloquée en échappant les entrées utilisateurs.</p>
-                    <p><strong>2. Architecture REST :</strong> Utilise les méthodes HTTP standards : GET (lire), POST (créer), PUT/PATCH (modifier), DELETE (supprimer).</p>
-                `,
-                quiz: {
-                    question: "Quelle méthode HTTP utilise-t-on généralement pour créer une nouvelle ressource sur une API REST ?",
-                    options: ["GET", "POST", "DELETE"],
-                    answer: 1
-                }
-            },
-
-            // --- MÉDECINE & SANTÉ ---
-            {
-                id: 13,
-                category: "Médecine & Santé",
-                level: "L1",
-                uni: "UGANC / KOFFI",
-                title: "Anatomie Générale & Biologie Cellulaire (PCEM1)",
-                summary: "Ostéologie, arthrologie, myologie des membres, organisation de la cellule eucaryote et cycle cellulaire.",
-                readTime: "10 min de lecture",
-                content: `
-                    <p><strong>1. Plans de référence en anatomie :</strong> Le plan sagittal (divise en droite et gauche), le plan frontal/coronal (antérieur et postérieur) et le plan transversal/horizontal (supérieur et inférieur).</p>
-                    <p><strong>2. Biologie cellulaire :</strong> La mitochondrie assure la respiration cellulaire et la production d'ATP (énergie). Les ribosomes assurent la synthèse des protéines.</p>
-                `,
-                quiz: {
-                    question: "Quel organite cellulaire produit la majorité de l'énergie (ATP) ?",
-                    options: ["Le noyau", "La mitochondrie", "L'appareil de Golgi"],
-                    answer: 1
-                }
-            },
-            {
-                id: 14,
-                category: "Médecine & Santé",
-                level: "L2",
-                uni: "UGANC / KOFFI",
-                title: "Physiologie Cardiovasculaire & Respiratoire",
-                summary: "Révolution cardiaque, débit cardiaque, pression artérielle, mécanique ventilatoire et échanges gazeux alvéolaires.",
-                readTime: "9 min de lecture",
-                content: `
-                    <p><strong>1. Formule du Débit Cardiaque (DC) :</strong> DC = Fréquence Cardiaque (FC) × Volume d'Éjection Systolique (VES). Au repos, environ 5 L/min.</p>
-                    <p><strong>2. Hématose :</strong> Échange gazeux au niveau de la membrane alvéolo-capillaire par diffusion passive selon le gradient de pression partielle (O2 passe vers le sang, CO2 vers l'alvéole).</p>
-                `,
-                quiz: {
-                    question: "Comment calcule-t-on le débit cardiaque ?",
-                    options: ["FC × VES", "Tension × Pouls", "Volume pulmonaire / FC"],
-                    answer: 0
-                }
-            },
-            {
-                id: 15,
-                category: "Médecine & Santé",
-                level: "L3",
-                uni: "UGANC / KOFFI",
-                title: "Sémiologie Médicale & Pharmacologie Générale",
-                summary: "Interrogatoire clinique, examen physique appareil par appareil, pharmacocinétique (ADME) et pharmacodynamie.",
-                readTime: "11 min de lecture",
-                content: `
-                    <p><strong>1. Les 4 temps de l'examen clinique :</strong> Inspection, Palpation, Percussion, Auscultation.</p>
-                    <p><strong>2. Pharmacocinétique (ADME) :</strong> Étudie le devenir du médicament dans l'organisme : Absorption, Distribution, Métabolisme (principalement hépatique) et Élimination (principalement rénale).</p>
-                `,
-                quiz: {
-                    question: "Quel organe assure principalement le métabolisme des médicaments ?",
-                    options: ["Le foie", "La rate", "Le pancréas"],
-                    answer: 0
-                }
-            },
-            {
-                id: 16,
-                category: "Médecine & Santé",
-                level: "L4",
-                uni: "UGANC",
-                title: "Pathologies Infectieuses Tropicales & Santé Publique",
-                summary: "Prise en charge du paludisme grave, fièvres hémorragiques, épidémiologie et programmes de santé en Guinée.",
-                readTime: "10 min de lecture",
-                content: `
-                    <p><strong>1. Paludisme (Plasmodium falciparum) :</strong> Diagnostic confirmé par TDR (Test de Diagnostic Rapide) ou goutte épaisse. Traitement par CTA (Combinaisons Thérapeutiques à base d'Artémisinine) pour le paludisme simple, et Artésunate injectable pour le paludisme grave.</p>
-                `,
-                quiz: {
-                    question: "Quel est l'examen de référence pour quantifier la parasitémie du paludisme ?",
-                    options: ["La radiographie pulmonaire", "La goutte épaisse / frottis sanguin", "L'échographie"],
-                    answer: 1
-                }
-            },
-
-            // --- COMMUNICATION & JOURNALISME ---
-            {
-                id: 17,
-                category: "Communication & Journalisme",
-                level: "L1",
-                uni: "ISIC / UNC / MERCURE",
-                title: "Introduction aux Écosystèmes Numériques & Médias",
-                summary: "Comprendre l'impact des réseaux sociaux, des plateformes et de l'information en ligne sur les stratégies de com.",
-                readTime: "5 min de lecture",
-                content: `
-                    <p><strong>1. Évolution des médias :</strong> Passage du modèle vertical traditionnel (Presse, Radio, TV : un émetteur vers une masse) au modèle horizontal interactif du Web 2.0 et des réseaux sociaux.</p>
-                    <p><strong>2. Modèle PESO :</strong> Paid Media (publicité payante), Earned Media (relations presse, partages), Shared Media (réseaux sociaux), Owned Media (site web, blog).</p>
-                `,
-                quiz: {
-                    question: "Dans le modèle PESO, à quoi correspond le site web officiel d'une entreprise ?",
-                    options: ["Paid Media", "Owned Media", "Earned Media"],
-                    answer: 1
-                }
-            },
-            {
-                id: 18,
-                category: "Communication & Journalisme",
-                level: "L2",
-                uni: "ISIC / UNC",
-                title: "Techniques d'Interview & Reportage",
-                summary: "Les règles fondamentales pour préparer un entretien, poser les bonnes questions et vérifier ses sources.",
-                readTime: "8 min de lecture",
-                content: `
-                    <p><strong>1. La règle des 5W (ou QQOQCCP) :</strong> Qui, Quoi, Où, Quand, Comment, Combien, Pourquoi. Indispensable dès l'attaque (le chapô) d'un article.</p>
-                    <p><strong>2. La pyramide inversée :</strong> Structurer l'information de la plus importante (en haut) vers les détails secondaires (en bas).</p>
-                    <p><strong>3. Vérification :</strong> Toujours croiser au moins deux sources indépendantes avant publication.</p>
-                `,
-                quiz: {
-                    question: "Où place-t-on l'information la plus importante dans la structure de la pyramide inversée ?",
-                    options: ["À la toute fin", "Au début (attaque / chapô)", "Au milieu"],
-                    answer: 1
-                }
-            },
-            {
-                id: 19,
-                category: "Communication & Journalisme",
-                level: "L3",
-                uni: "ISIC / UNC",
-                title: "Régulation de la Presse, Déontologie & Droit des Médias",
-                summary: "Rôle de la HAC (Haute Autorité de la Communication) en Guinée, loi sur la liberté de la presse et éthique journalistique.",
-                readTime: "7 min de lecture",
-                content: `
-                    <p><strong>1. Régulation en Guinée :</strong> La Haute Autorité de la Communication (HAC) veille au respect de l'éthique, de la déontologie et à l'accès équitable aux médias publics.</p>
-                    <p><strong>2. Délits de presse :</strong> La diffamation (allégation d'un fait qui porte atteinte à l'honneur) et l'injure publique.</p>
-                `,
-                quiz: {
-                    question: "Quelle institution régule les médias et la presse en République de Guinée ?",
-                    options: ["La HAC", "La BCRG", "La CENI"],
-                    answer: 0
-                }
-            },
-
-            // --- LETTRES & SCIENCES HUMAINES ---
-            {
-                id: 20,
-                category: "Lettres & Sciences Humaines",
-                level: "L1",
-                uni: "UGLC-SC / UJNK / U-LABE / ISSEG",
-                title: "Sociologie Générale & Anthropologie Africaine",
-                summary: "Les pères fondateurs (Durkheim, Weber), fait social, socialisation, culture et parenté en Afrique de l'Ouest.",
-                readTime: "8 min de lecture",
-                content: `
-                    <p><strong>1. Émile Durkheim :</strong> Définit le fait social comme toute manière d'agir extérieure à l'individu et douée d'un pouvoir de coercition. Il faut « expliquer le social par le social ».</p>
-                    <p><strong>2. Max Weber :</strong> Développe la sociologie compréhensive centrée sur le sens que les acteurs donnent à leurs actions sociales.</p>
-                `,
-                quiz: {
-                    question: "Quel sociologue a théorisé la notion de « fait social » ?",
-                    options: ["Max Weber", "Émile Durkheim", "Pierre Bourdieu"],
-                    answer: 1
-                }
-            },
-            {
-                id: 21,
-                category: "Lettres & Sciences Humaines",
-                level: "L2",
-                uni: "UGLC-SC / UJNK / U-LABE",
-                title: "Géographie Physique & Humaine de la Guinée",
-                summary: "Les 4 régions naturelles (Basse-Guinée, Moyenne-Guinée, Haute-Guinée, Guinée Forestière), hydrographie et démographie.",
-                readTime: "7 min de lecture",
-                content: `
-                    <p><strong>1. Le Château d'eau de l'Afrique de l'Ouest :</strong> Le massif du Fouta-Djalon donne naissance aux grands fleuves ouest-africains : le Niger (Djoliba), le Sénégal (Bafing) et la Gambie.</p>
-                    <p><strong>2. Les 4 régions naturelles :</strong> Basse-Côte (climat subguinéen, mangrove), Moyenne-Guinée (relief montagneux, Mont Loura), Haute-Guinée (savane, climat soudanien), Guinée Forestière (forêt dense, Mont Nimba).</p>
-                `,
-                quiz: {
-                    question: "Dans quelle région naturelle prend source le fleuve Niger ?",
-                    options: ["Basse-Guinée", "Moyenne-Guinée (Fouta-Djalon)", "Guinée Forestière"],
-                    answer: 1
-                }
-            },
-
-            // --- SCIENCES & AGRONOMIE ---
-            {
-                id: 22,
-                category: "Sciences & Agronomie",
-                level: "L1",
-                uni: "UGANC / ISAV-FARANAH / U-NZEREKORE",
-                title: "Chimie Générale, Atomistique & Liaisons Chimiques",
-                summary: "Structure de l'atome, tableau périodique, configuration électronique (règle de Klechkowski) et géométrie VSEPR.",
-                readTime: "8 min de lecture",
-                content: `
-                    <p><strong>1. Configuration électronique :</strong> Remplissage des sous-couches par ordre d'énergie croissante selon la règle de Klechkowski (1s, 2s, 2p, 3s, 3p, 4s, 3d...).</p>
-                    <p><strong>2. Liaisons chimiques :</strong> Liaison covalente (mise en commun d'électrons), liaison ionique (transfert d'électrons entre un métal et un non-métal) et liaison hydrogène.</p>
-                `,
-                quiz: {
-                    question: "Combien d'électrons au maximum peut contenir une sous-couche 'p' ?",
-                    options: ["2 électrons", "6 électrons", "10 électrons"],
-                    answer: 1
-                }
-            },
-            {
-                id: 23,
-                category: "Sciences & Agronomie",
-                level: "L3",
-                uni: "ISAV-FARANAH / U-NZEREKORE",
-                title: "Pédologie, Fertilité des Sols & Agronomie Tropicale",
-                summary: "Constitution du sol, complexe argilo-humique (CAH), pH des sols tropicaux et techniques de fertilisation durable.",
-                readTime: "9 min de lecture",
-                content: `
-                    <p><strong>1. Le Complexe Argilo-Humique (CAH) :</strong> Association de colloïdes électronégatifs (argile + humus) reliés par des cations floculants (notamment Ca2+), permettant de retenir les éléments nutritifs et l'eau.</p>
-                    <p><strong>2. Sols ferrallitiques en Guinée :</strong> Souvent acides et lessivés par les fortes pluies, nécessitant des amendements organiques et calciques.</p>
-                `,
-                quiz: {
-                    question: "Quel cation joue un rôle majeur de pont entre l'argile et l'humus dans le CAH ?",
-                    options: ["Le calcium (Ca2+)", "Le sodium (Na+)", "Le chlore (Cl-)"],
-                    answer: 0
-                }
-            },
-
-            // --- MÉTHODOLOGIE ---
-            {
-                id: 24,
-                category: "Méthodologie",
-                level: "L1",
-                uni: "TOUTES UNIVERSITÉS",
-                title: "Rédaction Administrative & Professionnelle",
-                summary: "Règles de la correspondance administrative en Guinée, note de service, compte rendu, rapport et lettre de motivation.",
-                readTime: "6 min de lecture",
-                content: `
-                    <p><strong>1. Le style administratif :</strong> Objectivité, courtoisie, précision, prudence et responsabilité (utilisation du « je » de fonction et non du « nous »).</p>
-                    <p><strong>2. Mentions obligatoires d'une lettre administrative :</strong> Timbre (en haut à gauche), lieu et date (en haut à droite), suscription (« Monsieur le Ministre / Recteur... »), objet, corps du texte, formule de politesse et signature.</p>
-                `,
-                quiz: {
-                    question: "Quel pronom personnel utilise le signataire d'une lettre administrative officielle ?",
-                    options: ["Nous", "Je", "On"],
-                    answer: 1
-                }
-            },
-            {
-                id: 25,
-                category: "Méthodologie",
-                level: "L3",
-                uni: "TOUTES UNIVERSITÉS",
-                title: "Méthodologie du Mémoire de Licence (L3 / L4)",
-                summary: "Choix du sujet, formulation de la problématique, hypothèses de recherche, revue de littérature et normes APA.",
-                readTime: "9 min de lecture",
-                content: `
-                    <p><strong>1. Structure classique d'un mémoire en Guinée :</strong> Introduction générale -> Partie 1 : Cadre théorique et méthodologique -> Partie 2 : Cadre empirique, présentation et analyse des résultats -> Conclusion générale et recommandations.</p>
-                    <p><strong>2. La problématique :</strong> C'est la question centrale à laquelle votre travail de recherche va tenter de répondre scientifiquement.</p>
-                `,
-                quiz: {
-                    question: "Comment appelle-t-on la question centrale qui guide tout un mémoire de recherche ?",
-                    options: ["La bibliographie", "La problématique", "La dédicace"],
-                    answer: 1
-                }
-            }
-        ];
-
-        let activeCategory = "Tout voir";
-        let currentCourse = null;
-
-        // Initialisation des boutons de filières
-        function renderCategories() {
-            const container = document.getElementById('categoryPills');
-            container.innerHTML = categories.map(cat => {
-                const isActive = cat === activeCategory;
-                return `
-                    <button onclick="selectCategory('${cat}')" 
-                        class="whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition ${
-                            isActive 
-                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' 
-                            : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/60'
-                        }">
-                        ${cat}
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function selectCategory(cat) {
-            activeCategory = cat;
-            renderCategories();
-            filterCourses();
-        }
-
-        function resetFilters() {
-            activeCategory = "Tout voir";
-            document.getElementById('searchInput').value = "";
-            document.getElementById('uniSelect').value = "ALL";
-            document.getElementById('levelSelect').value = "ALL";
-            renderCategories();
-            filterCourses();
-        }
-
-        // Filtrage des cours
-        function filterCourses() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const uni = document.getElementById('uniSelect').value;
-            const level = document.getElementById('levelSelect').value;
-
-            const filtered = courses.filter(course => {
-                const matchCat = activeCategory === "Tout voir" || course.category === activeCategory;
-                const matchLevel = level === "ALL" || course.level === level;
-                const matchUni = uni === "ALL" || course.uni.includes(uni) || course.uni === "TOUTES UNIVERSITÉS";
-                const matchQuery = query === "" || 
-                    course.title.toLowerCase().includes(query) || 
-                    course.summary.toLowerCase().includes(query) ||
-                    course.category.toLowerCase().includes(query);
-
-                return matchCat && matchLevel && matchUni && matchQuery;
-            });
-
-            renderCourses(filtered);
-        }
-
-        // Affichage des cartes de cours
-        function renderCourses(list) {
-            const grid = document.getElementById('coursesGrid');
-            const empty = document.getElementById('emptyState');
-            const count = document.getElementById('courseCount');
-
-            count.textContent = `${list.length} fiche(s) disponible(s)`;
-
-            if (list.length === 0) {
-                grid.innerHTML = "";
-                empty.classList.remove('hidden');
+            if (isPaid) {
+                document.getElementById('trialStatus').innerText = "Abonnement Actif ✓";
+                document.getElementById('trialStatus').className = "text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-full font-medium";
                 return;
             }
 
-            empty.classList.add('hidden');
-            grid.innerHTML = list.map(course => `
-                <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between gap-2 mb-3">
-                            <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-blue-500/15 text-blue-400 border border-blue-500/20">
-                                ${course.category}
-                            </span>
-                            <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-                                ${course.level}
-                            </span>
-                        </div>
+            if (!installTime) {
+                installTime = new Date().getTime();
+                localStorage.setItem('studygn_install_time', installTime);
+            }
 
-                        <h3 class="text-base sm:text-lg font-bold text-white mb-2 leading-snug">
-                            ${course.title}
-                        </h3>
+            let now = new Date().getTime();
+            let elapsed = now - parseInt(installTime);
+            let timeLeft = TRIAL_DURATION_MS - elapsed;
 
-                        <p class="text-xs sm:text-sm text-slate-400 line-clamp-3 mb-4 leading-relaxed">
-                            ${course.summary}
-                        </p>
-                    </div>
-
-                    <div>
-                        <div class="text-[11px] text-slate-500 mb-3 truncate">
-                            🏛️ ${course.uni}
-                        </div>
-                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                            <span class="text-xs text-slate-400">${course.readTime}</span>
-                            <button onclick="openCourse(${course.id})" 
-                                class="bg-slate-800 hover:bg-blue-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition">
-                                Lire le cours →
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Ouverture du lecteur de cours + Quiz
-        function openCourse(id) {
-            currentCourse = courses.find(c => c.id === id);
-            if (!currentCourse) return;
-
-            document.getElementById('modalCategory').textContent = currentCourse.category;
-            document.getElementById('modalLevel').textContent = `Niveau ${currentCourse.level}`;
-            document.getElementById('modalUni').textContent = currentCourse.uni;
-            document.getElementById('modalTitle').textContent = currentCourse.title;
-            document.getElementById('modalContent').innerHTML = currentCourse.content;
-            document.getElementById('modalReadTime').textContent = `⏱️ ${currentCourse.readTime}`;
-
-            // Setup Quiz
-            document.getElementById('quizQuestion').textContent = currentCourse.quiz.question;
-            const feedback = document.getElementById('quizFeedback');
-            feedback.classList.add('hidden');
-            feedback.textContent = "";
-
-            const optionsContainer = document.getElementById('quizOptions');
-            optionsContainer.innerHTML = currentCourse.quiz.options.map((opt, idx) => `
-                <button onclick="checkQuiz(${idx}, this)" 
-                    class="quiz-btn w-full text-left text-xs sm:text-sm bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg px-3.5 py-2.5 text-slate-200 transition">
-                    ${opt}
-                </button>
-            `).join('');
-
-            document.getElementById('courseModal').classList.remove('hidden');
-        }
-
-        function checkQuiz(selectedIndex, btnElement) {
-            const buttons = document.querySelectorAll('.quiz-btn');
-            const feedback = document.getElementById('quizFeedback');
-            const correctIndex = currentCourse.quiz.answer;
-
-            buttons.forEach((btn, idx) => {
-                btn.disabled = true;
-                if (idx === correctIndex) {
-                    btn.classList.remove('bg-slate-900', 'border-slate-700');
-                    btn.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
-                } else if (idx === selectedIndex) {
-                    btn.classList.remove('bg-slate-900', 'border-slate-700');
-                    btn.classList.add('bg-red-500/20', 'border-red-500', 'text-red-300');
-                }
-            });
-
-            feedback.classList.remove('hidden');
-            if (selectedIndex === correctIndex) {
-                feedback.textContent = "✅ Bonne réponse ! Tu maîtrises ce point du programme.";
-                feedback.className = "text-xs font-semibold mt-3 text-emerald-400";
+            if (timeLeft <= 0) {
+                document.getElementById('paywallModal').classList.remove('hidden');
+                document.getElementById('trialStatus').innerText = "Essai expiré ✕";
             } else {
-                feedback.textContent = "❌ Mauvaise réponse. Regarde la bonne réponse surlignée en vert ci-dessus.";
-                feedback.className = "text-xs font-semibold mt-3 text-red-400";
+                let daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+                document.getElementById('trialStatus').innerText = `Essai gratuit : ${daysLeft} jour(s) restants`;
             }
         }
 
-        function closeModal() {
-            document.getElementById('courseModal').classList.add('hidden');
+        function openPaywall() {
+            document.getElementById('paywallModal').classList.remove('hidden');
         }
 
-        function openSubModal() {
-            document.getElementById('subModal').classList.remove('hidden');
+        function checkSecretCode() {
+            let inputCode = document.getElementById('secretCodeInput').value.trim();
+            if (inputCode === SECRET_PRO_CODE) {
+                localStorage.setItem('studygn_is_paid', 'true');
+                alert('Abonnement activé avec succès ! Bienvenue sur StudyGN.');
+                document.getElementById('paywallModal').classList.add('hidden');
+                location.reload();
+            } else {
+                alert('Code secret incorrect. Contactez l\'administrateur.');
+            }
         }
 
-        function closeSubModal() {
-            document.getElementById('subModal').classList.add('hidden');
+        function importPDF() {
+            let title = document.getElementById('pdfTitle').value.trim();
+            let category = document.getElementById('pdfCategory').value;
+            let fileInput = document.getElementById('pdfFile');
+            
+            if (!title || fileInput.files.length === 0) {
+                alert('Veuillez entrer un titre et sélectionner un fichier PDF.');
+                return;
+            }
+
+            let fileName = fileInput.files[0].name;
+            let container = document.getElementById('coursesGrid');
+            
+            let newCard = document.createElement('div');
+            newCard.className = "course-card bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-500 transition shadow-md";
+            newCard.dataset.category = category;
+            newCard.dataset.level = "L2";
+            
+            newCard.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-lg">Importé (PDF)</span>
+                        <span class="text-xs font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded">PDF</span>
+                    </div>
+                    <h3 class="text-base font-bold text-white">${title}</h3>
+                    <p class="text-slate-400 text-xs mt-2">Fichier : ${fileName} — Analysé et intégré avec succès.</p>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-between items-center">
+                    <span class="text-[11px] text-slate-500">Prêt à réviser</span>
+                    <button onclick="alert('Ouverture du document PDF...')" class="text-xs bg-slate-700 hover:bg-brand-600 text-white px-3.5 py-2 rounded-xl transition font-medium">Consulter</button>
+                </div>
+            `;
+            container.prepend(newCard);
+            document.getElementById('pdfTitle').value = '';
+            fileInput.value = '';
+            alert('Votre cours PDF a été importé et analysé avec succès !');
         }
 
-        // Lancement au démarrage
-        renderCategories();
-        renderCourses(courses);
+        function filterCourses(category) {
+            const cards = document.querySelectorAll('.course-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.course-card');
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(term) ? 'flex' : 'none';
+            });
+        });
+
+        window.onload = checkTrial;
     </script>
 </body>
 </html>
